@@ -9,51 +9,45 @@ app.get('/', (req, res) => {
     // console.log('REQ::', req.headers, req.body, req.params)
     res.json('Welcome to Express Server...')
 })
-const users = [
-    {
-        user: 'test1',
-        id: '001',
-        email: 'test123@gmail.com'
-    },
-    {
-        user: 'test2',
-        id: '002',
-        email: 'test2@gmail.com'
-    },
-    {
-        user: 'test3',
-        id: '003',
-        email: 'test3@gmail.com'
-    }
-]
+
 const data =[]
 let latestId =0
-app.post('/register', (req, res) => {
+app.post('/register',async (req, res) => {
     try {
         const {name, email, mobile, password} = req.body
         if(!name || !email || !mobile || ![password]) {
-            return res.status(400).json({error: 'mandatory fields required'})
+            // return res.status(400).json({error: 'mandatory fields required'})
+            throw new Error("mandatory fields required")
         }
         latestId++
-        const user = {...req.body, latestId}
+        const user = {...req.body,id: latestId}
         data.push(user)
         return res.status(200).json(user)
     } catch (e) {
-        res.status(400).json(e)
+        console.log(e)
+        return res.status(400).send(e.message)
     }
 })
 
+app.get('/users', (req,res) => {
+    res.json(data)
+})
+
 app.post('/login', (req,res) => {
-    console.log('BODY::', req.body)
-    const {email, password} = req.body
-    if (!email || !password) {
-       return res.status(400).json({error: 'all fileds are required'})
+    try {
+        console.log('BODY::', req.body)
+        const {email, password} = req.body
+        if (!email || !password) {
+            throw new Error("mandatory fields required")
+        }
+        const userData = data.find(val => val.email == email)
+        if (userData) {
+            return res.json(userData)
+        }
+        throw new Error('User not found')
+    } catch (e) {
+        return res.status(400).send(e.message)
     }
-    const userData = data.find(val => val.email == email)
-    if (userData) {
-        return res.json(userData)
-    }
-    return res.status(400).json({error: 'User not found'})
 })
 
 app.listen(1234, ()=> {
